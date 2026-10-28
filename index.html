@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=400, initial-scale=1.0">
+<title>概率计算 - 百家乐精准预测</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+body {
+  font-family: "Consolas", "微软雅黑", monospace;
+  background: #0d1117;
+  width: 400px;
+  min-height: 750px;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: #00ff41;
+  margin: 0 auto;
+}
+.header {
+  background: #161b22;
+  color: #00ff41;
+  padding: 12px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid #00ff41;
+  text-shadow: 0 0 10px #00ff41;
+}
+.header .home {
+  position: absolute;
+  left: 12px;
+  font-size: 18px;
+  cursor: pointer;
+}
+.controls {
+  background: #161b22;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #30363d;
+  font-size: 12px;
+  color: #00ff41;
+}
+.controls input {
+  width: 50px;
+  padding: 4px;
+  border: 1px solid #00ff41;
+  border-radius: 3px;
+  text-align: center;
+  background: #0d1117;
+  color: #00ff41;
+}
+.controls button {
+  padding: 5px 15px;
+  background: #0d1117;
+  color: #00ff41;
+  border: 1px solid #00ff41;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.capital-bar {
+  background: #161b22;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #00ff41;
+  border-bottom: 1px solid #30363d;
+}
+.capital-bar input {
+  width: 70px;
+  padding: 2px;
+  border: 1px solid #00ff41;
+  border-radius: 3px;
+  background: #0d1117;
+  color: #00ff41;
+}
+.road-section {
+  background: #0d1117;
+  padding: 15px;
+  min-height: 120px;
+  border-bottom: 1px solid #30363d;
+}
+.road-title {
+  text-align: center;
+  color: #00ff41;
+  font-size: 12px;
+  margin-bottom: 10px;
+  opacity: 0.7;
+}
+.road-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+}
+.road-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: white;
+  font-weight: bold;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.dot-banker { background: #b71c1c; }
+.dot-player { background: #0d47a1; }
+.dot-tie { background: #f57f17; }
+.predict-section {
+  background: #0d1117;
+  padding: 20px;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.predict-title {
+  font-size: 14px;
+  color: #00ff41;
+  margin-bottom: 15px;
+  opacity: 0.8;
+}
+.predict-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+.predict-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 5px solid #b71c1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  color: #b71c1c;
+  transition: all 0.3s;
+  box-shadow: 0 0 20px rgba(183, 28, 28, 0.3);
+}
+.predict-num {
+  font-size: 48px;
+  font-weight: bold;
+  color: #00ff41;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+.predict-sub {
+  font-size: 12px;
+  color: #00ff41;
+  margin-top: 10px;
+  opacity: 0.7;
+}
+.confidence-bar {
+  width: 80%;
+  height: 8px;
+  background: #21262d;
+  border-radius: 4px;
+  margin: 15px auto 5px;
+  overflow: hidden;
+  border: 1px solid #30363d;
+}
+.prob-box {
+  width: 90%;
+  margin: 10px auto;
+  padding: 10px;
+  background: #161b22;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+}
+.prob-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+}
+.prob-label {
+  width: 25px;
+  font-weight: bold;
+  font-size: 13px;
+  text-align: center;
+}
+.prob-label.banker { color: #ef5350; }
+.prob-label.tie { color: #f9a825; }
+.prob-label.player { color: #42a5f5; }
+.prob-bar {
+  flex: 1;
+  height: 12px;
+  background: #21262d;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.prob-fill {
+  height: 100%;
+  transition: width 0.5s;
+}
+.prob-fill.banker { background: #b71c1c; }
+.prob-fill.tie { background: #f57f17; }
+.prob-fill.player { background: #0d47a1; }
+.prob-val {
+  width: 40px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #00ff41;
+  text-align: right;
+}
+.chip-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+.chip {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px dashed #fff;
+  background: #b71c1c;
+  color: white;
+  font-weight: bold;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.chip:nth-child(2) { background: #1565c0; }
+.chip:nth-child(3) { background: #2e7d32; }
+.chip:nth-child(4) { background: #f57f17; }
+.chip:nth-child(5) { background: #6a1b9a; }
+.chip:nth-child(6) { background: #37474f; }
+.chip:hover { transform: scale(1.1); }
+.chip.active {
+  border-color: #00ff41;
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.6);
+  transform: scale(1.1);
+}
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f57f17, #00ff41);
+  width: 0%;
+  transition: width 0.5s;
+}
+.bet-box {
+  background: #161b22;
+  border: 1px solid #00ff41;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 15px;
+  text-align: left;
+  display: none;
+}
+.bet-box.show { display: block; }
+.bet-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #00ff41;
+  margin-bottom: 8px;
+}
+.bet-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #8b949e;
+  padding: 3px 0;
+}
+.bet-row .val {
+  font-weight: bold;
+  color: #00ff41;
+}
+.tip-text {
+  background: #161b22;
+  padding: 8px;
+  font-size: 11px;
+  color: #00ff41;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+.recent-section {
+  background: #0d1117;
+  padding: 8px 12px;
+  border-top: 1px solid #30363d;
+}
+.recent-title {
+  font-size: 11px;
+  color: #00ff41;
+  margin-bottom: 5px;
+  opacity: 0.6;
+}
+.recent-list {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.bottom-btns {
+  display: flex;
+  height: 65px;
+  position: sticky;
+  bottom: 0;
+}
+.bottom-btns button {
+  flex: 1;
+  border: none;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-top: 1px solid #30363d;
+}
+.bottom-btns button:active { opacity: 0.6; transform: scale(0.98); }
+.btn-undo { background: #555; color: #00ff41 !important; font-size: 16px !important; }
+.btn-tie { background: #f57f17; }
+.btn-banker { background: #b71c1c; }
+.btn-player { background: #0d47a1; }
+.stats-row {
+  display: flex;
+  background: #161b22;
+  border-top: 1px solid #30363d;
+}
+.stat-box {
+  flex: 1;
+  text-align: center;
+  padding: 6px;
+  border-right: 1px solid #30363d;
+}
+.stat-box:last-child { border-right: none; }
+.stat-box .n { font-size: 14px; font-weight: bold; color: #00ff41; }
+.stat-box .l { font-size: 10px; color: #8b949e; }
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="home" onclick="resetAll()">🏠</span>
+  概率计算
+</div>
+<div class="controls">
+  <span>第 <input type="number" id="roundNum" value="1"> 局</span>
+  <span>第 <input type="number" id="streakNum" value="0"> 连</span>
+  <span>余额 <input type="number" id="balance" value="4000"></span>
+  <button onclick="undo()">↩ 撤回</button>
+</div>
+<div class="capital-bar">
+  <span>💰 本金: <input type="number" id="capitalInput" value="1000"></span>
+  <span>🎯 目标: <input type="number" id="targetInput" value="10000"></span>
+</div>
+<div class="road-section">
+  <div class="road-title">—— 珠盘路 ——</div>
+  <div class="road-grid" id="roadGrid"></div>
+</div>
+<div class="predict-section">
+  <div class="predict-title">概率计算下一局</div>
+  <div class="predict-main">
+    <div class="predict-circle" id="predCircle">庄</div>
+    <div class="predict-num" id="predNum">1440</div>
+  </div>
+  <div class="predict-sub" id="predSub">等待前5-8手数据...</div>
+  <div class="prob-box">
+    <div class="prob-row">
+      <span class="prob-label banker">庄</span>
+      <div class="prob-bar"><div class="prob-fill banker" id="probBanker" style="width:0%"></div></div>
+      <span class="prob-val" id="probBankerVal">0%</span>
+    </div>
+    <div class="prob-row">
+      <span class="prob-label tie">和</span>
+      <div class="prob-bar"><div class="prob-fill tie" id="probTie" style="width:0%"></div></div>
+      <span class="prob-val" id="probTieVal">0%</span>
+    </div>
+    <div class="prob-row">
+      <span class="prob-label player">闲</span>
+      <div class="prob-bar"><div class="prob-fill player" id="probPlayer" style="width:0%"></div></div>
+      <span class="prob-val" id="probPlayerVal">0%</span>
+    </div>
+  </div>
+  <div class="confidence-bar">
+    <div class="confidence-fill" id="confFill"></div>
+  </div>
+  <div style="font-size:11px;color:#00ff41;opacity:0.7" id="confText">置信度: 0%</div>
+  <div class="bet-box" id="betBox">
+    <div class="bet-title">💰 精准投注建议</div>
+    <div class="bet-row">
+      <span>推荐方向:</span>
+      <span class="val" id="betSide">庄</span>
+    </div>
+    <div class="bet-row">
+      <span>投注比例:</span>
+      <span class="val">
+        <select id="ratioSelect" onchange="updateBet()">
+          <option value="0.1">10%</option>
+          <option value="0.2" selected>20%</option>
+        </select>
+      </span>
+    </div>
+    <div class="bet-row">
+      <span>投注金额:</span>
+      <span class="val" id="betAmountDisplay">200</span>
+    </div>
+    <div class="chip-row">
+      <button class="chip" onclick="setChip(10)">10</button>
+      <button class="chip" onclick="setChip(50)">50</button>
+      <button class="chip active" onclick="setChip(100)">100</button>
+      <button class="chip" onclick="setChip(200)">200</button>
+      <button class="chip" onclick="setChip(500)">500</button>
+      <button class="chip" onclick="setChip(1000)">1K</button>
+    </div>
+    <div class="bet-row">
+      <span>马丁倍数:</span>
+      <span class="val" id="betMartingale">1x</span>
+    </div>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
+    <button onclick="speakPrediction()" style="padding:6px 15px;background:#161b22;border:1px solid #00ff41;color:#00ff41;border-radius:4px;cursor:pointer;font-size:12px">🔊 语音播报</button>
+    <button onclick="newRoad()" style="padding:6px 15px;background:#161b22;border:1px solid #f57f17;color:#f57f17;border-radius:4px;cursor:pointer;font-size:12px">🆕 新路单开始</button>
+  </div>
+</div>
+<div class="tip-text">
+  逐步实时对输入正确的游戏结果,并且严格逻辑的软件提示。置信度≥80%才输出建议。
+</div>
+<div class="stats-row">
+  <div class="stat-box">
+    <div class="n" id="sTotal">0</div>
+    <div class="l">总局数</div>
+  </div>
+  <div class="stat-box">
+    <div class="n" id="sWin">0</div>
+    <div class="l">预测对</div>
+  </div>
+  <div class="stat-box">
+    <div class="n" id="sLose">0</div>
+    <div class="l">预测错</div>
+  </div>
+  <div class="stat-box">
+    <div class="n" id="sRate">0%</div>
+    <div class="l">胜率</div>
+  </div>
+</div>
+<div class="recent-section">
+  <div class="recent-title">最近记录:</div>
+  <div class="recent-list" id="recentList"></div>
+</div>
+<div class="bottom-btns">
+  <button class="btn-undo" onclick="undo()">↩ 撤回</button>
+  <button class="btn-tie" onclick="record('和')">和</button>
+  <button class="btn-banker" onclick="record('庄')">庄</button>
+  <button class="btn-player" onclick="record('闲')">闲</button>
+</div>
+<script>
+let data = JSON.parse(localStorage.getItem('bac_precise') || JSON.stringify({
+  history: [], predictions: [], win: 0, lose: 0, capital: 1000
+}));
+function save() { localStorage.setItem('bac_precise', JSON.stringify(data)); }
+function init() { render(); predict(); }
+function record(result) {
+  if (data.predictions.length > 0) {
+    const lastP = data.predictions[data.predictions.length - 1];
+    if (!lastP.judged && lastP.confidence >= 80) {
+      lastP.judged = true;
+      if (lastP.pred === result) data.win++;
+      else data.lose++;
+    }
+  }
+  data.history.push(result);
+  save(); render(); predict();
+}
+function undo() {
+  if (data.history.length === 0) { alert('没有记录可以撤回'); return; }
+  const removed = data.history.pop();
+  if (data.predictions.length > 0) {
+    const lastP = data.predictions[data.predictions.length - 1];
+    if (lastP.judged) {
+      if (lastP.pred === removed) data.win--;
+      else data.lose--;
+      lastP.judged = false;
+    }
+  }
+  save(); render(); predict();
+}
+function editRecord(index) {
+  const current = data.history[index];
+  const choice = prompt(`第 ${index + 1} 局当前是【${current}】,改成什么?\n输入: 庄 / 闲 / 和`, current);
+  if (!choice) return;
+  const c = choice.trim();
+  if (c !== '庄' && c !== '闲' && c !== '和') { alert('只能输入 庄 / 闲 / 和'); return; }
+  data.history[index] = c;
+  save(); render(); predict();
+}
+function speakPrediction() {
+  const side = document.getElementById('predCircle').textContent;
+  if (side === '和' || side === '--') return;
+  const utter = new SpeechSynthesisUtterance(side);
+  utter.lang = 'zh-CN'; utter.rate = 1.2; utter.volume = 1;
+  speechSynthesis.speak(utter);
+}
+function newRoad() {
+  if (confirm('开始新路单?\n当前记录会被清空,统计保留。')) {
+    data.history = []; data.predictions = [];
+    save(); render(); predict();
+  }
+}
+let currentBet = 100;
+function setChip(amount) {
+  currentBet = amount;
+  document.getElementById('betAmountDisplay').textContent = amount;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function updateBet() {
+  const capital = parseFloat(document.getElementById('capitalInput').value) || 1000;
+  const ratio = parseFloat(document.getElementById('ratioSelect').value) || 0.2;
+  currentBet = Math.round(capital * ratio);
+  document.getElementById('betAmountDisplay').textContent = currentBet;
+}
+function render() {
+  document.getElementById('roundNum').value = data.history.length;
+  document.getElementById('sTotal').textContent = data.history.length;
+  document.getElementById('sWin').textContent = data.win;
+  document.getElementById('sLose').textContent = data.lose;
+  const total = data.win + data.lose;
+  const rate = total > 0 ? Math.round(data.win / total * 100) : 0;
+  document.getElementById('sRate').textContent = rate + '%';
+  if (data.history.length > 0) {
+    const last = data.history[data.history.length - 1];
+    let s = 1;
+    for (let i = data.history.length - 2; i >= 0; i--) {
+      if (data.history[i] === last) s++; else break;
+    }
+    document.getElementById('streakNum').value = s;
+  }
+  const grid = document.getElementById('roadGrid');
+  grid.innerHTML = '';
+  const startIdx = Math.max(0, data.history.length - 30);
+  data.history.slice(startIdx).forEach((r, i) => {
+    const realIdx = startIdx + i;
+    const d = document.createElement('div');
+    d.className = 'road-dot ' + (r === '庄' ? 'dot-banker' : r === '闲' ? 'dot-player' : 'dot-tie');
+    d.textContent = r[0];
+    d.style.cursor = 'pointer';
+    d.title = `第${realIdx + 1}局: ${r} (点击修改)`;
+    d.onclick = () => editRecord(realIdx);
+    grid.appendChild(d);
+  });
+  const list = document.getElementById('recentList');
+  list.innerHTML = '';
+  data.history.slice(-15).reverse().forEach(r => {
+    const d = document.createElement('div');
+    d.className = 'road-dot ' + (r === '庄' ? 'dot-banker' : r === '闲' ? 'dot-player' : 'dot-tie');
+    d.style.width = '18px'; d.style.height = '18px'; d.style.fontSize = '9px';
+    d.textContent = r[0];
+    list.appendChild(d);
+  });
+}
+function predict() {
+  const h = data.history;
+  if (h.length < 5) {
+    setPrediction('--', '--', '等待前5-8手数据积累...', 0);
+    document.getElementById('betBox').classList.remove('show');
+    return;
+  }
+  let banker = h.filter(x => x === '庄').length;
+  let player = h.filter(x => x === '闲').length;
+  let tie = h.filter(x => x === '和').length;
+  let total = h.length;
+  const recent = h.slice(-8);
+  const rBanker = recent.filter(x => x === '庄').length;
+  const rPlayer = recent.filter(x => x === '闲').length;
+  const last = h[h.length - 1];
+  let streak = 1;
+  for (let i = h.length - 2; i >= 0; i--) { if (h[i] === last) streak++; else break; }
+  let bScore = 50, pScore = 50;
+  bScore += 5;
+  bScore += (player / total) * 20;
+  pScore += (banker / total) * 20;
+  bScore += rBanker * 5;
+  pScore += rPlayer * 5;
+  if (streak >= 3) {
+    if (last === '庄') { pScore += 35; bScore -= 10; }
+    else { bScore += 35; pScore -= 10; }
+  }
+  if (h.length >= 5) {
+    const last5 = h.slice(-5);
+    const b5 = last5.filter(x => x === '庄').length;
+    if (b5 >= 4) pScore += 25;
+    else if (b5 <= 1) bScore += 25;
+  }
+  if (h.length >= 3) {
+    const prev = h[h.length - 2];
+    if (last !== prev) { if (last === '庄') bScore += 10; else pScore += 10; }
+  }
+  let longDragon = false;
+  if (streak >= 4) { longDragon = true; if (last === '庄') bScore += 5; else pScore += 5; }
+  let tieScore = tie > 0 ? (tie / total) * 100 : 9;
+  const totalScore = bScore + pScore + tieScore;
+  const bankerPct = Math.round(bScore / totalScore * 100);
+  const playerPct = Math.round(pScore / totalScore * 100);
+  const tiePct = 100 - bankerPct - playerPct;
+  document.getElementById('probBanker').style.width = bankerPct + '%';
+  document.getElementById('probPlayer').style.width = playerPct + '%';
+  document.getElementById('probTie').style.width = tiePct + '%';
+  document.getElementById('probBankerVal').textContent = bankerPct + '%';
+  document.getElementById('probPlayerVal').textContent = playerPct + '%';
+  document.getElementById('probTieVal').textContent = tiePct + '%';
+  let pred, color;
+  if (bScore > pScore) { pred = '庄'; color = '#e53935'; }
+  else { pred = '闲'; color = '#1e88e5'; }
+  const maxScore = Math.max(bScore, pScore);
+  const minScore = Math.min(bScore, pScore);
+  let confidence = Math.round((maxScore / (maxScore + minScore)) * 100);
+  if (h.length >= 10) confidence = Math.min(95, confidence + 5);
+  if (h.length >= 15) confidence = Math.min(98, confidence + 3);
+  const weight = Math.round(maxScore * 10);
+  let reason = '';
+  if (confidence < 80) reason = '信号不足,等待高概率机会...';
+  else if (streak >= 3) reason = `${last}连${streak}手,追反高概率`;
+  else if (rBanker > rPlayer + 3) reason = '近8手庄路强势';
+  else if (rPlayer > rBanker + 3) reason = '近8手闲路强势';
+  else if (longDragon) reason = '长龙趋势延续';
+  else reason = '综合概率最优解';
+  setPrediction(pred, weight, reason, confidence, color);
+  if (confidence >= 80) {
+    document.getElementById('betBox').classList.add('show');
+    document.getElementById('betSide').textContent = pred;
+    const capital = parseFloat(document.getElementById('capitalInput').value) || 1000;
+    const ratio = parseFloat(document.getElementById('ratioSelect').value) || 0.2;
+    currentBet = Math.round(capital * ratio);
+    document.getElementById('betAmountDisplay').textContent = currentBet;
+    let mart = 1;
+    if (data.lose > 0 && data.win === 0) mart = 2;
+    document.getElementById('betMartingale').textContent = mart + 'x';
+    data.predictions.push({ pred: pred, round: h.length, confidence: confidence, judged: false });
+    save();
+  } else {
+    document.getElementById('betBox').classList.remove('show');
+  }
+}
+function setPrediction(side, num, sub, conf, color = '#e53935') {
+  const c = document.getElementById('predCircle');
+  c.textContent = side; c.style.borderColor = color; c.style.color = color;
+  document.getElementById('predNum').textContent = num;
+  document.getElementById('predSub').textContent = sub;
+  document.getElementById('confFill').style.width = conf + '%';
+  document.getElementById('confText').textContent = '置信度: ' + conf + '%';
+}
+function resetAll() {
+  if (confirm('清空所有记录?')) {
+    data = { history: [], predictions: [], win: 0, lose: 0, capital: 1000 };
+    save(); render(); predict();
+  }
+}
+init();
+</script>
+</body>
+</html>
